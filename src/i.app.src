@@ -1,0 +1,7 @@
+{application, i,
+ [{description, "i"},
+  {vsn, "1.10"},
+  {registered, []},
+  {applications, [kernel,stdlib]},
+  {mod, { i, []}}
+  ]}.

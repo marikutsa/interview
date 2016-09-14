@@ -21,3 +21,9 @@ BEGIN return QUERY SELECT id as _id, product_id as _prod, participant_id as _par
                    FROM assignment WHERE product_id = id_ ORDER BY action,ts; END; $a$
 LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION Patch() RETURNS int AS $b$
+BEGIN update product set current_owner_id = 
+      (SELECT participant_id FROM assignment WHERE product_id = 1 ORDER BY action DESC,ts DESC LIMIT 1);
+      return 1; END $b$
+LANGUAGE plpgsql;
+ 

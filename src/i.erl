@@ -5,6 +5,7 @@
 -compile(export_all).
 -export([start/2, stop/1, init/1]).
 -record(core, { operation, resource, module, req, method }).
+-define(POOL,1000).
 
 dividers35() -> lists:sum([ case I rem 3 == 0 orelse I rem 5 == 0 of
                                  true -> I;
@@ -33,15 +34,20 @@ solve(N) -> case lists:sum([ N rem I || I <- lists:seq(2,20) ]) == 0 of
                  true -> N;
                  false -> solve(N+1) end.
 
-tables()   -> [  ].
+tables()   -> [ cache ].
 opt()      -> [ set, named_table, { keypos, 1 }, public ].
 init([])   -> [ ets:new(T,opt()) || T <- tables() ],
-              { ok, { { one_for_one, 5, 10 }, [spec(8080)] } }.
+              { ok, { { one_for_one, 5, 10 }, [spec(8080),colz_api()] } }.
 
 % curl -X POST -H 'Content-type: text/xml' -d @priv/Test.xml http://localhost:8080/capture
 
+pool()     -> ?POOL.
+colz(I)    -> {{worker,I},{i_node,start_link,[worker,I]},permanent,2000,worker,[i_node]}.
+colz_api() -> {api,{i_node,start_link,[api,pool()]},permanent,2000,worker,[i_node]}.
 stop(_)    -> ok.
-start(_,_) -> supervisor:start_link({local,i},i,[]).
+start(_,_) -> Res = supervisor:start_link({local,i},i,[]),
+              [ gen_server:cast(i:cache(api),{start,I}) || I <- lists:seq(1,pool() div 2)],
+              Res.
 spec(Port) -> ranch:child_spec(http, 100, ranch_tcp, port(Port), cowboy_protocol, env()).
 env()      -> [ { env, [ { dispatch, points() } ] } ].
 port(Port) -> [ { port, Port  } ].
@@ -107,3 +113,12 @@ validate({gtin,Value}) when is_list(Value) andalso (length(Value) == 18 orelse
     case Digit of Control -> ok;
                         _ -> {error,{checksum,Digit-Control}} end;
 validate(_)               -> {error,gtin}.
+
+cache(Key, undefined) -> ets:delete(cache,Key);
+cache(Key, Value) -> ets:insert(cache,{Key,Value}), Value.
+cache(Key) ->
+    Res = ets:lookup(cache,Key),
+    Val = case Res of [] -> undefined; [Value] -> Value; Values -> Values end,
+    case Val of undefined -> undefined;
+                {_,X} -> X;
+                _ -> Val end.

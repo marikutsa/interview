@@ -62,6 +62,27 @@ $ cat priv/test.csv
 
 ### 7. Massive Spawn
 
+While running test on 1M numbers a bit timeless, you can observe current calculations as follow:
+
+```
+> gen_server:call(i:cache(api),{info}).
+{state,api,1001455,524,1000456}
+17> length(supervisor:which_children(i)).
+999
+18> supervisor:which_children(i).
+[{{worker,233690},<0.22658.21>,worker,[i_node]},
+ {{worker,233689},<0.22655.21>,worker,[i_node]},
+ {{worker,233688},<0.22652.21>,worker,[i_node]},
+ {{worker,233666},<0.22583.21>,worker,[...]},
+ {{worker,233665},<0.22580.21>,worker,...},
+ {{worker,...},<0.22577.21>,...},
+ {{...},...},
+ {...}|...]
+```
+
+Current max length of sequence 524 of first 1000456 natural numbers.
+Note that CPU avg is about 70% with a pool of 1000 processes.
+
 ### 8. GTIN validator
 
 ```

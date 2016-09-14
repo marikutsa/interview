@@ -11,7 +11,7 @@ Compile
 -------
 
 ```
-$ git clone http://github.com/5HT/interview
+$ git clone http://github.com/5HT/interview && cd interview
 $ ./mad dep com pla rep
 ```
 
@@ -56,7 +56,6 @@ Test
 ### 6. XML over REST sample
 
 ```
-$ ./mad rep
 $ curl -X POST -H 'Content-type: text/xml' -d @priv/Test.xml http://localhost:8080/capture
 $ cat priv/test.csv
 ```
